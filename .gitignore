@@ -8,7 +8,7 @@ mat/scripts/results/
 mat/results/
 
 # Python cache
-__pycache__/
+__pycache__
 *.pyc
 
 # Logs
@@ -23,3 +23,8 @@ generation_log.txt
 build/
 dist/
 *.egg-info/
+
+# Byte-compiled / optimized / DLL files
+mat/__pycache__/
+*.py[cod]
+*$py.class
