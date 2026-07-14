@@ -1,0 +1,17 @@
+# Large data files
+*.pkl
+*.pt
+*.pth
+
+# Results folders
+mat/scripts/results/
+mat/results/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+nohup.out
+generation_log.txt
