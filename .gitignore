@@ -15,3 +15,11 @@ __pycache__/
 *.log
 nohup.out
 generation_log.txt
+
+# Cython compiled files
+*.so
+*.c
+*.pyd
+build/
+dist/
+*.egg-info/
