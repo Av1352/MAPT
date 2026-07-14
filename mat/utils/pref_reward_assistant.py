@@ -93,7 +93,7 @@ class PrefRewardAssistant:
         self.his_act = np.zeros((
             self.n_rollout_threads, self.preference_traj_length, num_agents, act_shape), dtype=np.float32)
         self.his_timesteps = np.zeros((
-            self.n_rollout_threads, self.preference_traj_length), dtype=np.long)
+            self.n_rollout_threads, self.preference_traj_length), dtype=np.int64)
         self.his_attn_masks = np.zeros((
             self.n_rollout_threads, self.preference_traj_length, num_agents), dtype=np.float32)
         self.last_dones = np.zeros(self.n_rollout_threads, dtype=np.float32)
@@ -223,7 +223,7 @@ class PrefRewardAssistant:
             (1 - self.last_dones).reshape(-1, 1, 1, 1), (1, *self.his_act.shape[1:]))
         # self.his_timesteps: (n_rollout_threads, traj_length, )
         self.his_timesteps = self.his_timesteps * np.tile(
-            (1 - self.last_dones.astype(np.long)).reshape(-1, 1), (1, *self.his_timesteps.shape[1:]))
+            (1 - self.last_dones.astype(np.int64)).reshape(-1, 1), (1, *self.his_timesteps.shape[1:]))
         # self.his_timesteps: (n_rollout_threads, traj_length, num_agents, )
         self.his_attn_masks = self.his_attn_masks * np.tile(
             (1 - self.last_dones).reshape(-1, 1, 1), (1, *self.his_attn_masks.shape[1:]))
