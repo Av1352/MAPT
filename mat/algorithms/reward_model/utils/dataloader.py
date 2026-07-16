@@ -66,6 +66,9 @@ def load_dataset(env, task, data_dir, action_type):
 
 
 all_discrete_action_num = {
+    'overcooked': {
+        'cramped_room': 6,
+    },
     'smac': {
         '3m': 9,
         '3s5z': 14,
