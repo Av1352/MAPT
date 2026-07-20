@@ -17,6 +17,14 @@ import setproctitle
 import numpy as np
 from pathlib import Path
 import torch
+import multiprocessing as mp
+
+# JAX initializes internal threads in the parent process; forking a
+# thread-initialized process (Python's default on Linux/WSL) can deadlock.
+# 'spawn' starts each subprocess fresh instead, which JAX is safe with.
+# This MUST run before any multiprocessing.Process() gets created, and
+# before the ShareSubprocVecEnv workers (which import jax) are spun up.
+mp.set_start_method("spawn", force=True)
 
 sys.path.append("../../")
 from mat.config import get_config
