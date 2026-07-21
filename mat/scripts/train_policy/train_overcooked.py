@@ -75,6 +75,11 @@ def parse_args(args, parser):
     parser.add_argument('--layout_name', type=str, default='cramped_room',
                         help="Which Overcooked v2 layout to run on")
     parser.add_argument('--num_agents', type=int, default=2, help="number of players")
+    parser.add_argument('--reward_shaping_horizon', type=int, default=2_500_000,
+                        help="Steps over which shaped (partial-credit) reward is annealed "
+                             "to 0, same pattern as ippo_rnn_overcooked_v2.py. This only "
+                             "affects the logged GROUND-TRUTH metric, not the actual PPO "
+                             "training signal (which is the NMR preference reward).")
 
     all_args = parser.parse_known_args(args)[0]
     return all_args

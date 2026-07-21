@@ -58,6 +58,17 @@ class OvercookedEnv(object):
         self.key = jax.random.PRNGKey(getattr(args, "seed", 0))
         self.state = None
 
+        # ── Reward shaping ──────────────────────────────────────────────
+        # IPPO's original successful run (reward 0 -> 498) used dense
+        # partial-credit shaped reward (onion pickup, pot placement,
+        # plating, etc.) on top of the sparse "dish delivered" reward,
+        # annealed to 0 over training so the agent ends up optimizing the
+        # true sparse objective. Without this, ground-truth reward stays
+        # at 0 for a very long time since full deliveries are rare for an
+        # untrained policy. We mirror that pattern here.
+        self.reward_shaping_horizon = getattr(args, "reward_shaping_horizon", 2_500_000)
+        self.local_step_count = 0  # steps seen by THIS subprocess's env instance
+
         obs_shape = self.env.observation_space().shape
         self.obs_dim = int(np.prod(obs_shape))
         self.n_actions = self.env.action_space(self.agents[0]).n
@@ -108,7 +119,19 @@ class OvercookedEnv(object):
         obs = self._flatten_obs(obs_dict)
         share_obs = self._make_share_obs(obs)
 
-        rewards = np.array([[reward_dict[a]] for a in self.agents], dtype=np.float32)
+        # ── Apply annealed shaped reward, same pattern as ippo_rnn_overcooked_v2.py ──
+        self.local_step_count += 1
+        anneal_factor = max(0.0, 1.0 - self.local_step_count / self.reward_shaping_horizon)
+        shaped_reward = info.get("shaped_reward", None)
+        if shaped_reward is not None:
+            combined_reward = {
+                a: float(reward_dict[a]) + float(shaped_reward[a]) * anneal_factor
+                for a in self.agents
+            }
+        else:
+            combined_reward = {a: float(reward_dict[a]) for a in self.agents}
+
+        rewards = np.array([[combined_reward[a]] for a in self.agents], dtype=np.float32)
 
         done_env = bool(done_dict["__all__"])
         dones = np.array([done_env] * self.n_agents, dtype=bool)
