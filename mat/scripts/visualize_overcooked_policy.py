@@ -40,6 +40,27 @@ def _t2n(x):
     return x.detach().cpu().numpy()
 
 
+def _unwrap_to_grid_state(state):
+    """Walk down through wrapper layers until we find the actual game
+    state (the one with a .grid attribute), which is what the visualizer
+    needs. Avoids another round of manual attribute-name debugging."""
+    seen = 0
+    while not hasattr(state, "grid") and seen < 5:
+        if hasattr(state, "env_state"):
+            state = state.env_state
+        elif hasattr(state, "state"):
+            state = state.state
+        else:
+            raise AttributeError(
+                f"Could not find a .grid attribute by unwrapping. "
+                f"Stuck at type {type(state)} with fields "
+                f"{[f.name for f in __import__('dataclasses').fields(state)]}. "
+                f"Please paste this error back."
+            )
+        seen += 1
+    return state
+
+
 def main():
     # ── Build the same all_args the training run used ──────────────────
     # We reuse get_config() + the same extra flags train_overcooked.py
@@ -92,8 +113,10 @@ def main():
 
         # state_seq collects the RAW jaxmarl env state at every timestep,
         # which is what the visualizer actually needs to render frames
-        # (not our flattened obs vectors).
-        state_seq = [env.state]
+        # (not our flattened obs vectors). env.state is wrapped by
+        # OvercookedV2LogWrapper, so we unwrap .env_state to get the
+        # actual game state (the one with .grid) that the visualizer expects.
+        state_seq = [_unwrap_to_grid_state(env.state)]
 
         rnn_states = np.zeros(
             (env.n_agents, all_args.recurrent_N, all_args.hidden_size), dtype=np.float32
@@ -118,7 +141,7 @@ def main():
             obs, share_obs, rewards, dones, infos, available_actions = env.step(actions)
             episode_ground_truth_reward += float(np.sum(rewards))
 
-            state_seq.append(env.state)
+            state_seq.append(_unwrap_to_grid_state(env.state))
 
             if bool(np.all(dones)):
                 break

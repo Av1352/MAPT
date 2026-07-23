@@ -45,7 +45,8 @@ class OvercookedEnv(object):
             "overcooked_v2",
             layout=overcooked_v2_layouts[self.layout_name],
             agent_view_size=2,
-            negative_rewards=True,
+            negative_rewards=False,  # was True — penalizing failed interactions was
+                                      # likely incentivizing the policy to do nothing
             sample_recipe_on_delivery=True,
             random_agent_positions=True,
         )
